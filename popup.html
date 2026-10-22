@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Character.ai Persona Exporter</title>
+<style>
+  :root {
+    --bg: #0A0517; --bg2: #1A0B3B; --item: rgba(45,22,87,.3); --item-h: rgba(45,22,87,.55);
+    --grad: linear-gradient(160deg, rgba(10,5,23,.8), rgba(26,11,59,.8), rgba(45,22,87,.8), rgba(26,11,59,.8), rgba(10,5,23,.8));
+    --text: #ABB2BF; --head: rgb(142,103,255); --info: #61afef; --border: rgb(45,22,87);
+    --pink: #f786f4; --red: rgb(255,103,142);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 420px; height: 600px; background: var(--bg); color: var(--text); display: flex; flex-direction: column;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; overflow: hidden; }
+  .header { background: var(--grad); padding: 12px 16px; text-align: center; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .header h1 { font-size: 17px; color: var(--head); text-shadow: rgba(142,103,255,.8) 0 0 10px; }
+  .header p { font-size: 11px; margin-top: 4px; line-height: 1.5; }
+  .toggle { cursor: pointer; color: var(--info); text-decoration: underline; }
+  #help { display: none; margin-top: 6px; text-align: left; border-top: 1px solid var(--border); padding-top: 6px; }
+  #help.show { display: block; }
+  .content { padding: 12px 16px; display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 10px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .box { background: var(--grad); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+  select, input[type=text] { flex: 1; background: var(--bg2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 7px 8px; font-size: 12px; outline: none; }
+  label.small { font-size: 11px; white-space: nowrap; }
+  button { flex: 1; padding: 9px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border); background: var(--grad); color: var(--text); transition: transform .15s; }
+  button:hover:not(:disabled) { transform: translateY(-1px); }
+  button:disabled { opacity: .45; cursor: default; }
+  .primary { color: var(--pink); border-color: rgb(87,22,75); text-shadow: rgba(247,134,244,.7) 0 0 8px; }
+  .primary.txt { color: var(--info); border-color: rgb(22,45,87); text-shadow: rgba(97,175,239,.7) 0 0 8px; }
+  .fetch { color: var(--head); }
+  .danger { color: var(--red); border-color: rgb(87,22,45); }
+  .small-btn { flex: none; padding: 5px 9px; font-size: 11px; }
+  #status { display: none; padding: 7px 10px; border-radius: 6px; font-size: 12px; text-align: center; background: var(--bg2); border: 1px solid var(--border); }
+  #status.error { color: var(--red); } #status.ok { color: var(--info); }
+  #list { flex: 1; min-height: 0; overflow-y: auto; background: var(--grad); border: 1px solid var(--border); border-radius: 8px;
+    scrollbar-width: thin; scrollbar-color: var(--head) var(--bg); }
+  .item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-bottom: 1px solid rgba(62,68,81,.5); background: var(--item); cursor: pointer; }
+  .item:hover { background: var(--item-h); }
+  .item:last-child { border-bottom: none; }
+  .avatar { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: var(--bg2); border: 1px solid rgba(62,68,81,.5); flex-shrink: 0; }
+  .info { flex: 1; min-width: 0; }
+  .name { color: var(--head); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .meta { font-size: 11px; opacity: .75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .empty { padding: 36px 20px; text-align: center; line-height: 1.6; }
+  input[type=checkbox] { accent-color: rgb(142,103,255); width: 15px; height: 15px; flex-shrink: 0; }
+  .count { font-size: 11px; margin-left: auto; opacity: .8; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>Character.ai Persona Exporter</h1>
+    <p><span class="toggle" id="helpToggle">Click here for instructions</span></p>
+    <div id="help" class="p">
+      1. Open <b>character.ai</b> (reload the tab once after installing this extension).<br>
+      2. Click <b>Fetch from account</b>. If nothing is found, open your persona list/settings on the site once &mdash; the extension captures what the page loads.<br>
+      3. Pick personas (or none = all) and export as <b>PNG + metadata</b> or <b>TXT</b>. Several at once are zipped.
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="row">
+      <button class="fetch" id="fetchBtn">⟳ Fetch from account</button>
+      <button class="danger" id="clearBtn">Delete all cached</button>
+    </div>
+
+    <div class="box">
+      <div class="row" style="margin-bottom:6px">
+        <label class="small">Export as</label>
+        <select id="mode">
+          <option value="png">PNG image + metadata</option>
+          <option value="txt">TXT file</option>
+          <option value="both">Image + TXT (folder per persona)</option>
+        </select>
+      </div>
+      <div class="row" id="formatRow">
+        <label class="small">Metadata</label>
+        <select id="format">
+          <option value="cai">Same as Character.ai Exporter</option>
+          <option value="v2">Tavern / Chara Card V2</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <input type="text" id="search" placeholder="Search personas…">
+      <button class="small-btn" id="selAll">Select all</button>
+      <button class="small-btn" id="selNone">None</button>
+    </div>
+
+    <div class="row">
+      <button class="primary" id="exportBtn">Export</button>
+      <span class="count" id="count"></span>
+    </div>
+
+    <div id="status"></div>
+    <div id="list"></div>
+    <div class="row"><button class="small-btn" id="rawBtn" style="flex:1">Download last raw API response (debug)</button></div>
+  </div>
+
+  <script src="jszip.min.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Character.ai Persona Exporter",
+  "version": "1.0.0",
+  "description": "Export your Character.ai personas as PNG with embedded metadata or as TXT, one by one or in bulk.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "*://*.character.ai/*",
+    "*://*.characterai.io/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*.character.ai/*"],
+      "js": ["injected.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["*://*.character.ai/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }
+  },
+  "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }
+}
