@@ -6,7 +6,7 @@ This extension was based on "Character export" extension, that let's you export 
 
 Full instruction was written in original post on reddit: https://www.reddit.com/r/CharacterAI_CAITools/s/CV3ZnJp1Um
 
-1. Just download files in one folder: folder/files
+1. Just download files in one folder: folder/files (press on "CODE" button, download zip and unzip out the folder)
 2. Go to the extension manager and turn on "Developer Mode", drag the folder and drop into tab
 3. Turn it on and refresh the personas' page
 
